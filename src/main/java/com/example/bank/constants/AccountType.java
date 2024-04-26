@@ -1,4 +1,4 @@
-package com.example.bank.contants;
+package com.example.bank.constants;
 
 public enum AccountType {
 	SAVINGS,

@@ -1,6 +1,6 @@
 package com.example.bank.dto;
 
-import com.example.bank.contants.Status;
+import com.example.bank.constants.Status;
 import com.example.bank.model.CreateUser;
 import com.example.bank.model.UpdateUser;
 import com.example.bank.model.User;

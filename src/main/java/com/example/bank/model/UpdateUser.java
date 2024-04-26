@@ -2,7 +2,7 @@ package com.example.bank.model;
 
 import java.util.Date;
 
-import com.example.bank.contants.Status;
+import com.example.bank.constants.Status;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;

@@ -10,4 +10,6 @@ import reactor.core.publisher.Mono;
 public interface AccountRepository extends ReactiveMongoRepository<Account,String>{
 	@Query("{ 'accountNumber' : ?0 }")
     Mono<Account> findByAccountNumber(String accountNumber);
+	@Query("{ 'customerId' : ?0 }")
+	Mono<Account>findByCustomerId(String cutomerId);
 }

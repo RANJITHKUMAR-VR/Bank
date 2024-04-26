@@ -1,13 +1,11 @@
-package com.example.bank;
+package com.example.bank.model;
 
 public class UserResponse {
 	private String accountNO;
 	private String customerId;
 	public UserResponse() {
-		super();
 	}
 	public UserResponse(String accountNO, String customerId) {
-		super();
 		this.accountNO = accountNO;
 		this.customerId = customerId;
 	}

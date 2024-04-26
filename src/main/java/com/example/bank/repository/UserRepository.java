@@ -10,5 +10,5 @@ import reactor.core.publisher.Mono;
 public interface UserRepository extends ReactiveMongoRepository<User,String> {
 	@Query("{ 'customerId' : ?0 }")
     Mono<User> findByCustomerId(String customerId);
-	Mono<User>findByEmail(String email);
+	Mono<User>findByPhoneNumber(String phoneNumber);
 }

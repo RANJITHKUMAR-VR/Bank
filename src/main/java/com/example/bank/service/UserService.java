@@ -3,11 +3,11 @@ package com.example.bank.service;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.example.bank.UserResponse;
-import com.example.bank.contants.AccountType;
-import com.example.bank.contants.Status;
+import com.example.bank.model.UserResponse;
+import com.example.bank.constants.AccountType;
+import com.example.bank.constants.Status;
 import com.example.bank.dto.CreateUserDto;
-import com.example.bank.error.UserNotFoundException;
+import com.example.bank.error.CustomException;
 import com.example.bank.model.CreateUser;
 import com.example.bank.model.UpdateUser;
 import com.example.bank.repository.AccountRepository;
@@ -25,28 +25,30 @@ public class UserService {
 	@Autowired
 	AccountService accountService;
     private final Logger logger = LoggerFactory.getLogger(UserService.class);
+                   
+    public Mono<UserResponse> createAccount(CreateUser createUser, AccountType accountType) {
+        return CreateUserDto.createUserDtoToUser(createUser)
+            .flatMap(user -> {
+                return userRepository.findByPhoneNumber(user.getPhoneNumber())
+                    .flatMap(existingUser -> Mono.error(new CustomException("User with this email already exists")))
+                    .switchIfEmpty(
+                        Mono.defer(() -> {
+                            user.setCustomerId(generateCustomerId());
+                            return userRepository.save(user)
+                                .flatMap(savedUser -> {
+                                    return accountService.createAccount(savedUser.getCustomerId(), accountType)
+                                        .flatMap(account -> {
+                                            UserResponse userResponse = new UserResponse();
+                                            userResponse.setAccountNO(account.getAccountNumber());
+                                            userResponse.setCustomerId(savedUser.getCustomerId());
+                                            return Mono.just(userResponse);
+                                        });
+                                });
+                        })
+                    ).cast(UserResponse.class);
+            });
+    }
 
-	public Mono<UserResponse> createAccount(CreateUser createUser,AccountType accountType) {
-		return CreateUserDto.createUserDtoToUser(createUser).flatMap(user -> {
-	        return userRepository.findByEmail(user.getEmail()).flatMap(existingUser -> {
-	            if (existingUser == null) {
-	                user.setCustomerId(generateCustomerId());
-	                System.out.println("Generated Customer ID: " + user.getCustomerId());
-	                return userRepository.save(user).flatMap(savedUser -> {
-	                    return accountService.createAccount(savedUser.getCustomerId(), accountType).map(account -> {
-	                        UserResponse userResponse = new UserResponse();
-	                        userResponse.setAccountNO(account.getAccountNumber());
-	                        userResponse.setCustomerId(savedUser.getCustomerId());
-	                        return userResponse;
-	                    });
-	                });
-	            } else {
-	                return Mono.error(new UserNotFoundException("User with email " + user.getEmail() + " already exists."));
-	            }
-	        });
-	    });
-			
-	}
 	public static String generateCustomerId() {
 		return UUID.randomUUID().toString().substring(0, 7);
 	}
@@ -70,12 +72,12 @@ public class UserService {
                                             .thenReturn("Successfully updated");
                                 } else {
                                     logger.warn("User with customer ID {} not found.", user.getCustomerId());
-                                    return Mono.error(new UserNotFoundException("User with customer ID " + user.getCustomerId() + " not found."));
+                                    return Mono.error(new CustomException("User with customer ID " + user.getCustomerId() + " not found."));
                                   }
                             })
-                            .switchIfEmpty(Mono.error(new UserNotFoundException("User with customer ID " + user.getCustomerId() + " not found.")));
+                            .switchIfEmpty(Mono.error(new CustomException("User with customer ID " + user.getCustomerId() + " not found.")));
                 })
-                .onErrorResume(UserNotFoundException.class,error -> {
+                .onErrorResume(CustomException.class,error -> {
                     logger.error("Failed to update user", error);
                     return Mono.error(error);
                 });
@@ -83,8 +85,20 @@ public class UserService {
 	public Mono<String> deactivateAccount(String accountId) {
 		return accountRepository.findByAccountNumber(accountId)
 			.flatMap(existingAccount->{
-			existingAccount.setStatus(Status.CLOSED);
-			return accountRepository.save(existingAccount).thenReturn("successfully deactivate");
+				if(existingAccount.getStatus().equals(Status.CLOSED)) {
+					return Mono.just("This Account is Already Deactivated");
+				}
+				existingAccount.setStatus(Status.CLOSED);
+				return accountRepository.save(existingAccount).thenReturn("successfully deactivate");
 			}).switchIfEmpty(Mono.just("Invalid AccountNumber "));
+	}
+	public Mono<String> activateAccount(String accountNumber) {
+		return accountRepository.findByAccountNumber(accountNumber).flatMap((account)->{
+			if(account.getStatus().equals(Status.ACTIVE)) {
+				return Mono.just("This Account is Already Activated");
+			}
+			account.setStatus(Status.ACTIVE);
+			return accountRepository.save(account).thenReturn("Auccessfully Activate");
+		}).switchIfEmpty(Mono.just("Ivalid AccountNumber"));
 	}
 }

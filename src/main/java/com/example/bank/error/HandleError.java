@@ -1,8 +1,8 @@
 package com.example.bank.error;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
-
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,9 +22,12 @@ public class HandleError {
 	                .collect(Collectors.toList());
 	        return ResponseEntity.badRequest().body(errors);
 	    }
-	  @ExceptionHandler(UserNotFoundException.class)
-	    public ResponseEntity<String> handleUserNotFoundException(UserNotFoundException ex) {
-	        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+	  @ExceptionHandler(CustomException.class)
+	    public ResponseEntity<HashMap<String, String>> handleUserNotFoundException(CustomException ex) {
+		  HashMap<String,String>error=new HashMap<>();
+		  error.put("Message", ex.getMessage());
+		  error.put("Status",HttpStatus.NOT_FOUND.toString() );
+	        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
 	    }
 	  @ExceptionHandler(NoResourceFoundException.class)
 	    public ResponseEntity<String> handleNoResourceFoundException(NoResourceFoundException ex) {

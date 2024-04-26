@@ -1,46 +1,53 @@
 package com.example.bank.model;
 
-
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import com.example.bank.contants.AccountType;
-import com.example.bank.contants.Status;
+import com.example.bank.constants.AccountType;
+import com.example.bank.constants.Status;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-@Document(collection="Account")
+
+@Document(collection = "Account")
 public class Account {
-    @Id
-    private String id; 
-    @NotBlank
-    private String accountNumber; 
-    @NotBlank
-    private String customerId; 
-    @NotNull
-    private double balance; 
-    @NotBlank
-    private double currency; 
-    @NotBlank
-    private AccountType type; 
-    private LocalDate dateOpened; 
-    @NotBlank
-    private Status status;    
+	@Id
+	private String id;
+	@NotBlank
+	private String accountNumber;
+	@NotBlank
+	private String customerId;
+	@NotNull
+	private double balance;
+	@NotBlank
+	private AccountType type;
+	private LocalDate dateOpened;
+	@NotBlank
+	private Status status;
+	private List<Transaction> depositTransactions;
+	private List<Transaction> withdrawTransactions;
+
 	public Account() {
+		this.depositTransactions = new ArrayList<>();
+		this.withdrawTransactions = new ArrayList<>();
 	}
 
-	public Account(@NotBlank String accountNumber, @NotBlank String customerId, @NotNull double balance,
-			@NotBlank double currency, @NotBlank AccountType type, LocalDate dateOpened, @NotBlank Status status) {
-		super();
+	public Account(String id, @NotBlank String accountNumber, @NotBlank String customerId, @NotNull double balance,
+			@NotBlank AccountType type, LocalDate dateOpened, @NotBlank Status status,
+			List<Transaction> depositTransactions, List<Transaction> withdrawTransactions) {
+		this.id = id;
 		this.accountNumber = accountNumber;
 		this.customerId = customerId;
 		this.balance = balance;
-		this.currency = currency;
 		this.type = type;
 		this.dateOpened = dateOpened;
 		this.status = status;
+		this.depositTransactions = depositTransactions;
+		this.withdrawTransactions = withdrawTransactions;
 	}
 
 	public String getId() {
@@ -75,14 +82,6 @@ public class Account {
 		this.balance = balance;
 	}
 
-	public double getCurrency() {
-		return currency;
-	}
-
-	public void setCurrency(double currency) {
-		this.currency = currency;
-	}
-
 	public AccountType getType() {
 		return type;
 	}
@@ -107,6 +106,19 @@ public class Account {
 		this.status = status;
 	}
 
-	
-	
+	public List<Transaction> getDepositTransactions() {
+		return depositTransactions;
+	}
+
+	public void setDepositTransactions(Transaction depositTransaction) {
+		this.depositTransactions.add(depositTransaction);
+	}
+
+	public List<Transaction> getWithdrawTransactions() {
+		return withdrawTransactions;
+	}
+
+	public void setWithdrawTransactions(Transaction withdrawTransaction) {
+		this.withdrawTransactions.add(withdrawTransaction);
+	}
 }

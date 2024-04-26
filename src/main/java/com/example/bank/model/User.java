@@ -5,7 +5,7 @@ import java.util.Date;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import com.example.bank.contants.Status;
+import com.example.bank.constants.Status;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
@@ -20,7 +20,6 @@ public class User {
 private String id;
 @NotBlank(message = "First name is required")
 private String firstName;
-
 @NotBlank(message = "Last name is required")
 private String lastName;
 @NotBlank
@@ -28,10 +27,8 @@ private String customerId;
 @Email(message = "Invalid email format")
 @NotBlank(message = "Email is required")
 private String email;
-
 @Pattern(regexp = "^\\+?[0-9\\-\\s()]*$", message = "Invalid phone number format")
 private String phoneNumber;
-
 @Past(message = "Date of birth must be in the past")
 @NotNull(message = "Date of birth is required")
 private Date dateOfBirth;
