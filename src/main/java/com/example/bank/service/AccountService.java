@@ -1,22 +1,24 @@
 package com.example.bank.service;
-
+import com.example.bank.model.ErrorResponse;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-
 import com.example.bank.constants.AccountType;
 import com.example.bank.constants.Status;
 import com.example.bank.constants.TransactionType;
 import com.example.bank.error.CustomException;
 import com.example.bank.model.Account;
+import com.example.bank.model.AccountNumber;
+import com.example.bank.model.AccountResponse;
 import com.example.bank.model.BalanceResponse;
 import com.example.bank.model.DepositRequest;
 import com.example.bank.model.Transaction;
 import com.example.bank.model.WithdrawResponse;
 import com.example.bank.model.WithdrawalRequest;
 import com.example.bank.repository.AccountRepository;
+import com.example.bank.repository.UserRepository;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -25,16 +27,19 @@ import reactor.core.publisher.Mono;
 public class AccountService {
 	@Autowired
 	AccountRepository accountRepository;
-
+	@Autowired
+	UserRepository userRepository;
 	public Mono<Account> createAccount(String customerId, AccountType accountType) {
-		Account account = new Account();
-		account.setAccountNumber(generateAccountNumber());
-		account.setCustomerId(customerId);
-		account.setBalance(0.0);
-		account.setDateOpened(LocalDate.now());
-		account.setType(accountType);
-		account.setStatus(Status.ACTIVE);
-		return accountRepository.save(account);
+		return userRepository.findByCustomerId(customerId).flatMap((existingUser)->{
+			Account account = new Account();
+			account.setAccountNumber(generateAccountNumber());
+			account.setCustomerId(customerId);
+			account.setBalance(0.0);
+			account.setDateOpened(LocalDate.now());
+			account.setType(accountType);
+			account.setStatus(Status.ACTIVE);
+			return accountRepository.save(account);
+		}).switchIfEmpty(Mono.error(new CustomException(new ErrorResponse(404,"Invalid CustomerId"))));
 	}
 
 	public static String generateAccountNumber() {
@@ -65,10 +70,10 @@ public class AccountService {
 	public Mono<WithdrawResponse> withdrawal(WithdrawalRequest withdrawalRequest) {
 		return accountRepository.findByAccountNumber(withdrawalRequest.getAccountNumber()).flatMap(account->{
 			if(account.getStatus().equals(Status.CLOSED)) {
-				return Mono.error(new CustomException("Unable To Withdra Your Account Was Blocked Contact The Bank"));
+				return Mono.error(new CustomException(new ErrorResponse(403,"Unable To Withdra Your Account Was Blocked Contact The Bank")));
 	    	}
 			if(account.getBalance()<withdrawalRequest.getAmount()) {
-				return Mono.error( new CustomException("You Have Insufficient Balance "+account.getBalance()));
+				return Mono.error( new CustomException(new ErrorResponse(400,"You Have Insufficient Balance "+account.getBalance())));
 			}
 			double amount = withdrawalRequest.getAmount();
 			amount=account.getBalance()-amount;
@@ -88,25 +93,43 @@ public class AccountService {
 		    account.setWithdrawTransactions(transaction);
 			withdrawResponse.setMessage("You Successfully Withdraw Amount");
 			return accountRepository.save(account).thenReturn(withdrawResponse);
-		}).switchIfEmpty(Mono.error(new CustomException("Invalid AccountNumber")));
+		}).switchIfEmpty(Mono.error(new CustomException(new ErrorResponse(404,"Invalid AccountNumber"))));
 	}
 
-	public Flux<Transaction> getStatement(String customerId) {
-	    return accountRepository.findByCustomerId(customerId)
+	public Flux<Transaction> getStatement(AccountNumber accountNumber) {
+	    return accountRepository.findByAccountNumber(accountNumber.getAccountNumber())
 	            .flatMapMany(account -> {
 	                Flux<Transaction> depositTransactions = Flux.fromIterable(account.getDepositTransactions());
 	                Flux<Transaction> withdrawTransactions = Flux.fromIterable(account.getWithdrawTransactions());
-	                return Flux.concat(depositTransactions, withdrawTransactions);
+	                return Flux.concat(depositTransactions, withdrawTransactions).switchIfEmpty(Flux.error(new CustomException(new ErrorResponse(404,"You Did Not Do Any Transaction"))));
 	            })
-	            .switchIfEmpty(Flux.error(new CustomException("No user with this customer id")));
+	            .switchIfEmpty(Flux.error(new CustomException(new ErrorResponse(404,"No User With This AccountNumber id"))));
 	}
 
-	public Mono<BalanceResponse> getBalance(String accountNumber) {
-		return accountRepository.findByAccountNumber(accountNumber).flatMap((account)->{
+	public Mono<BalanceResponse> getBalance(AccountNumber accountNumber) {
+		return accountRepository.findByAccountNumber(accountNumber.getAccountNumber()).flatMap((account)->{
 			BalanceResponse balance=new BalanceResponse();
-			balance.setAccountNumber(accountNumber);
+			balance.setAccountNumber(accountNumber.getAccountNumber());
 			balance.setBalance(account.getBalance());
 			return Mono.just(balance);
-		}).switchIfEmpty(Mono.error(new CustomException("There is No AccountNumber")));
+		}).switchIfEmpty(Mono.error(new CustomException(new ErrorResponse(404,"There is No AccountNumber"))));
+	}
+
+	public Flux<AccountResponse> allAcountDetails(String customerId) {
+		return accountRepository.findByCustomerId(customerId)
+				.flatMap((account)->{
+					if(account.getStatus().equals(Status.ACTIVE)) {
+					AccountResponse accountResponse=new AccountResponse();
+					accountResponse.setAccountNumber(account.getAccountNumber());
+					accountResponse.setCustomerId(account.getCustomerId());
+					accountResponse.setBalance(account.getBalance());
+					accountResponse.setAccountType(account.getType());
+					accountResponse.setDateOpened(account.getDateOpened());
+					accountResponse.setStatus(account.getStatus());
+					return Mono.just(accountResponse);
+					}
+					return Mono.empty();
+				})
+				.switchIfEmpty(Mono.error(new CustomException(new ErrorResponse(404,"Invalid CustomerId"))));
 	}
 }

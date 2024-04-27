@@ -17,10 +17,9 @@ public static Mono<User> createUserDtoToUser(CreateUser createUser) {
 	user.setEmail(createUser.getEmail());
 	user.setDateOfBirth(createUser.getDateOfBirth());
 	user.setAddress(createUser.getAddress());
-	user.setUsername(createUser.getUsername());
+	user.setAadharNumber(createUser.getAadharNumber());
 	user.setPhoneNumber(createUser.getPhoneNumber());
-	user.setPassword(createUser.getPassword());
-	user.setActive(Status.ACTIVE);
+	user.setIsActive(Status.ACTIVE);
 	return Mono.just(user);
 }
 public static Mono<User> updateUserDtoToUser(UpdateUser updateUser) {
@@ -28,11 +27,10 @@ public static Mono<User> updateUserDtoToUser(UpdateUser updateUser) {
 	user.setCustomerId(updateUser.getCustomerId());
 	user.setFirstName(updateUser.getFirstName());
 	user.setLastName(updateUser.getLastName());
+	user.setEmail(updateUser.getEmail());
 	user.setDateOfBirth(updateUser.getDateOfBirth());
 	user.setAddress(updateUser.getAddress());
-	user.setPhoneNumber(updateUser.getPhoneNumber());
-	user.setPassword(updateUser.getPassword());
-	user.setActive(updateUser.getIsActive());
+	user.setIsActive(updateUser.getIsActive());
 	return Mono.just(user);
 }
 }

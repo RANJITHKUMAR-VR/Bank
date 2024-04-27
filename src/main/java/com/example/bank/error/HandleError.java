@@ -26,8 +26,8 @@ public class HandleError {
 	    public ResponseEntity<HashMap<String, String>> handleUserNotFoundException(CustomException ex) {
 		  HashMap<String,String>error=new HashMap<>();
 		  error.put("Message", ex.getMessage());
-		  error.put("Status",HttpStatus.NOT_FOUND.toString() );
-	        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+		  error.put("Status",String.valueOf(ex.getErrorResponse().getStatusCode()));
+	        return ResponseEntity.status(ex.getErrorResponse().getStatusCode()).body(error);
 	    }
 	  @ExceptionHandler(NoResourceFoundException.class)
 	    public ResponseEntity<String> handleNoResourceFoundException(NoResourceFoundException ex) {
