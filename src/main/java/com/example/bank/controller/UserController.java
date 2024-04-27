@@ -24,32 +24,35 @@ import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/api")
-public class AccountController {
+public class UserController {
 	@Autowired
 	UserService userService;
 	@Autowired
 	AccountService accountService;
 
+//first time creating a account 
 	@PostMapping("/new-account")
 	public Mono<UserResponse> createAccount(@Valid @RequestBody CreateUser createUser) {
 		return userService.createAccount(createUser);
 	}
 
+//update the profile
 	@PutMapping("/update")
 	public Mono<String> updateAccount(@Valid @RequestBody UpdateUser updateUser) {
 		return userService.updateAccount(updateUser);
 	}
 
+//deactivate the account
 	@DeleteMapping("/deactivate")
 	public Mono<String> deactivatAccount(@RequestBody AccountNumber accountNumber) {
 		return userService.deactivateAccount(accountNumber);
 	}
-
+//activate the account
 	@PutMapping("/activate")
 	public Mono<String> activateAccount(@RequestBody AccountNumber accountNumber) {
-		return userService.activateAccount(accountNumber);
+		return accountService.activateAccount(accountNumber);
 	}
-
+//create a account 
 	@PostMapping("/create-account")
 	public Mono<UserResponse> createAccount(@RequestBody CreateAccountRequest createAccountRequest) {
 		Mono<Account> account = accountService.createAccount(createAccountRequest.getCustomerId(),
@@ -61,8 +64,10 @@ public class AccountController {
 			return Mono.just(userResponse);
 		});
 	}
+
+//give cutomerId get all active account
 	@GetMapping("/getAllAccount/{customerId}")
-	public Flux<AccountResponse> allAccountDetails(@PathVariable String customerId){
-		return accountService.allAcountDetails(customerId);
+	public Flux<AccountResponse> allAccountDetails(@PathVariable String customerId) {
+		return userService.allAcountDetails(customerId);
 	}
 }

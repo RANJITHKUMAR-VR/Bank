@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.bank.model.AccountNumber;
 import com.example.bank.model.BalanceResponse;
 import com.example.bank.model.Transaction;
-import com.example.bank.service.AccountService;
+import com.example.bank.service.StatementService;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -18,13 +18,13 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/api")
 public class StatementController {
 	@Autowired
-	AccountService accountService;
+	StatementService statementService; 
 	@GetMapping("/statement")
 	public Flux<Transaction>getStatment(@RequestBody AccountNumber accountNumber){
-		return accountService.getStatement(accountNumber);
+		return statementService.getStatement(accountNumber);
 	}
 	@GetMapping("/balance")
 	public Mono<BalanceResponse>getBalance(@RequestBody AccountNumber accountNumber){
-		return accountService.getBalance(accountNumber);
+		return statementService.getBalance(accountNumber);
 	}
 }

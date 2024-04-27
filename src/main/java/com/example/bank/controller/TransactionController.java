@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.bank.model.DepositRequest;
 import com.example.bank.model.WithdrawResponse;
 import com.example.bank.model.WithdrawalRequest;
-import com.example.bank.service.AccountService;
+import com.example.bank.service.TransactionService;
 
 import reactor.core.publisher.Mono;
 
@@ -18,14 +18,14 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/api")
 public class TransactionController {
 	@Autowired
-	AccountService accountService;
+	TransactionService transactionService;
 	@PostMapping("/deposit")
 	public Mono<ResponseEntity<String>> depositCash(@RequestBody DepositRequest depositRequest){
-		return accountService.depositCash(depositRequest);
+		return transactionService.depositCash(depositRequest);
 	}
 	
 	@PostMapping("/withdrawal")
 	public Mono<WithdrawResponse> withdrawal(@RequestBody WithdrawalRequest withdrawalRequest) {
-		return accountService.withdrawal(withdrawalRequest);
+		return transactionService.withdrawal(withdrawalRequest);
 	}
 }
